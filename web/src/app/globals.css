@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+/*
+ * Hashly: un campo navy profundo, tinta fría a contraste pleno y un solo acento,
+ * el ámbar de Bitcoin, que marca lo sellado y la acción principal.
+ * El verde aparece únicamente cuando una verificación coincide.
+ */
+
+:root {
+  color-scheme: dark;
+  --bg: #070b16;
+  --surface: #0e1424;
+  --surface-2: #151d33;
+  --ink: #eef2fa;
+  --muted: #a3adc2; /* 8.6:1 sobre --bg */
+  --accent: #f7931a;
+  --accent-ink: #070b16;
+  --ok: #57e39a;
+
+  --margin: clamp(16px, 2.5vw, 32px);
+  --gap: clamp(140px, 16vw, 240px);
+
+  /* Cinco tamaños, nada más. */
+  --step-small: 0.875rem;
+  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --step-lead: clamp(1.375rem, 1.1rem + 0.9vw, 2rem);
+  --step-head: clamp(2.5rem, 1.6rem + 3.6vw, 5rem);
+  --step-display: clamp(3.4rem, 0.6rem + 7.4vw, 9.5rem);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-ok: var(--ok);
+  --font-sans: var(--font-albert), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-imbue), ui-serif, Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; /* taste-skill-ignore: solo dentro de <code> y <pre> */
+}
+
+html {
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--step-body);
+  line-height: 1.55;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+/* ---------- Tipografía ---------- */
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-optical-sizing: auto;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 0.9;
+}
+
+.head {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-optical-sizing: auto;
+  text-transform: uppercase;
+  letter-spacing: -0.005em;
+  line-height: 0.95;
+  text-wrap: balance;
+}
+
+.frame-x {
+  padding-inline: var(--margin);
+}
+
+/* ---------- Botones: rectos, un solo relleno ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+  min-height: 3.25rem;
+  padding: 0.85rem 1.5rem;
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1;
+  transition:
+    transform 0.4s var(--ease-out),
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn-accent {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.btn-accent:hover {
+  background: #ffa83d;
+}
+.btn-quiet {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.btn-quiet:hover {
+  background: #1d2742;
+}
+
+.link {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+  transition: color 0.2s ease;
+}
+.link:hover {
+  color: var(--accent);
+}
+
+/* ---------- Entradas: parten a media opacidad, así el contenido nunca queda oculto ---------- */
+
+.js [data-reveal] {
+  opacity: 0.5;
+  transform: translate3d(0, 24px, 0);
+  transition:
+    opacity 0.9s var(--ease-out),
+    transform 0.9s var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 75ms);
+}
+.js [data-reveal].is-in,
+.js.reveal-all [data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Fragmentos de interfaz del producto: tienen sus propios bordes y su mono. */
+[data-ui] {
+  font-family: var(--font-sans);
+}
+code,
+pre {
+  /* taste-skill-ignore: la mono vive solo en código y hashes */
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.92em;
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 1.1rem 1.25rem 1.25rem;
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  line-height: 1.75;
+  background: transparent !important;
+}
+
+:root {
+  --shiki-foreground: #d9e0ef;
+  --shiki-background: transparent;
+  --shiki-token-constant: #ffb86b;
+  --shiki-token-string: #9fd8ff;
+  --shiki-token-comment: #8a95ad;
+  --shiki-token-keyword: #ffb86b;
+  --shiki-token-parameter: #d9e0ef;
+  --shiki-token-function: #9fe8c9;
+  --shiki-token-string-expression: #9fd8ff;
+  --shiki-token-punctuation: #a3adc2;
+  --shiki-token-link: #9fd8ff;
+}
+
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .js [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}
