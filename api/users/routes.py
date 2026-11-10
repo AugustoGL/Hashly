@@ -1,12 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 from argon2 import PasswordHasher
 
 from database.database import get_db
 from database.models import User
 
-from auth.auth import verify_password, create_access_token
+from auth.auth import (
+    burn_password_check,
+    create_access_token,
+    verify_password,
+)
 
 from auth.dependencies import get_current_user
 
@@ -20,14 +24,27 @@ router = APIRouter(
 password_hasher = PasswordHasher()
 
 
+def _normalize_email(value):
+    # Un solo usuario por email, sin importar mayúsculas
+    return value.strip().lower() if isinstance(value, str) else value
+
+
 class UserCreate(BaseModel):
-    email: str = Field(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    email: str = Field(
+        max_length=255,
+        pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+    )
     password: str = Field(min_length=8, max_length=128)
+
+    _email = field_validator("email", mode="before")(_normalize_email)
 
 
 class UserLogin(BaseModel):
-    email: str
-    password: str
+    email: str = Field(max_length=255)
+    # Tope de largo: argon2 con contraseñas enormes es un DoS barato
+    password: str = Field(max_length=128)
+
+    _email = field_validator("email", mode="before")(_normalize_email)
 
 
 @router.post("/register")
@@ -81,6 +98,8 @@ def login_user(
     )
 
     if not user:
+        burn_password_check(user_data.password)
+
         raise HTTPException(
             status_code=401,
             detail="Email o contraseña incorrectos"

@@ -44,6 +44,16 @@ def validate_files(
                 "Todos los archivos deben tener un nombre"
             )
 
+        if len(file.filename) > 255:
+            raise ValueError(
+                "El nombre de un archivo supera los 255 caracteres"
+            )
+
+        if any(ord(char) < 32 or ord(char) == 127 for char in file.filename):
+            raise ValueError(
+                "El nombre de un archivo tiene caracteres no permitidos"
+            )
+
         normalized_name = file.filename.lower()
 
         if normalized_name in filenames:

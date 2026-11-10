@@ -129,7 +129,7 @@ def _own_package(
 @router.post("/")
 async def create_package(
     background_tasks: BackgroundTasks,
-    name: str = Form(...),
+    name: str = Form(..., min_length=1, max_length=255),
     files: list[UploadFile] = File(...),
     method: str = Form(
         "ots",

@@ -5,6 +5,10 @@ from pathlib import Path
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from auth.hardening import (
+    BodySizeLimitMiddleware,
+    SecurityHeadersMiddleware,
+)
 from auth.ratelimit import RateLimitMiddleware
 from auth.routes import router as keys_router
 from config import CORS_ORIGINS
@@ -53,13 +57,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# El último agregado es el más externo: CORS -> cabeceras ->
+# rate limit -> tope de tamaño -> app
+app.add_middleware(BodySizeLimitMiddleware)
+
 app.add_middleware(RateLimitMiddleware)
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 v1 = APIRouter(prefix="/v1")

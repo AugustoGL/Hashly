@@ -1,5 +1,16 @@
 # Changelog
 
+## Sin publicar — revisión de seguridad
+
+- **Dependencias:** `pypdf` 6.19.0 → 6.21.4 (15 CVE) y `pillow` 12.3.0 → 13.0.0 (1 CVE).
+- **Integridad:** las imágenes multi-frame (TIFF multipágina, WebP animado) ahora incluyen todos los frames en la huella; antes solo el primero.
+- **DoS:** tope de píxeles por imagen, de páginas por PDF y de tamaño del cuerpo HTTP (se corta antes de escribir a disco).
+- **Rate limit:** por IP (antes se evadía inventando headers `Authorization`), con memoria acotada y límites propios para lista de espera y búsquedas públicas con archivos.
+- **Cuentas:** login de tiempo constante, emails en minúsculas, hashes dañados responden 401.
+- **Errores:** archivos corruptos responden 400 en vez de 500.
+- **Cabeceras de seguridad** en API y web; CORS restringido a los métodos y headers usados.
+- **Docker:** puertos solo en `127.0.0.1` por defecto, contenedores sin capabilities.
+
 ## v0.1.0 — 2026-11-10
 
 Primera versión descargable.

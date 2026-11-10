@@ -75,3 +75,23 @@ OTS_WORKER_INTERVAL = int(os.getenv("OTS_WORKER_INTERVAL", 600))
 
 # Tras estos días sin confirmar, el sello se marca como failed
 OTS_MAX_PENDING_DAYS = int(os.getenv("OTS_MAX_PENDING_DAYS", 7))
+
+# ---- Límites de procesamiento (anti DoS) ----
+
+# Píxeles totales por imagen, sumando todos sus frames
+MAX_IMAGE_PIXELS = int(os.getenv("MAX_IMAGE_PIXELS", 50_000_000))
+
+MAX_PDF_PAGES = int(os.getenv("MAX_PDF_PAGES", 2000))
+
+# Búsquedas públicas con archivos, por minuto y por IP (0 = desactivado)
+PUBLIC_UPLOAD_RATE_LIMIT_PER_MINUTE = int(
+    os.getenv("PUBLIC_UPLOAD_RATE_LIMIT_PER_MINUTE", 20)
+)
+
+if len(SECRET_KEY) < 32:
+    import warnings
+
+    warnings.warn(
+        "SECRET_KEY tiene menos de 32 caracteres: usá una más larga "
+        "(python -c \"import secrets; print(secrets.token_hex(32))\")"
+    )

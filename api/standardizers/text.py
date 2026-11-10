@@ -1,9 +1,12 @@
-from io import BytesIO   
-   
 def standardize_text(file):
     file.file.seek(0)
 
-    text = file.file.read().decode("utf-8")
+    try:
+        text = file.file.read().decode("utf-8")
+    except UnicodeDecodeError:
+        raise ValueError(
+            f"El archivo {file.filename} no es texto UTF-8 válido"
+        )
 
     text = text.replace("\r\n", "\n")
     text = text.replace("\r", "\n")

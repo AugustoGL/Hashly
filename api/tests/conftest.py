@@ -53,6 +53,17 @@ from main import app
 # ============================================================
 
 @pytest.fixture(autouse=True)
+def clean_rate_limiter():
+    """Cada test arranca con el limitador vacío."""
+
+    from auth import ratelimit
+
+    ratelimit.HITS.clear()
+    yield
+    ratelimit.HITS.clear()
+
+
+@pytest.fixture(autouse=True)
 def fake_ots(monkeypatch):
     """Los tests nunca tocan la red: el cliente OTS se reemplaza."""
 

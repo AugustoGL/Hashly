@@ -1,29 +1,46 @@
-
 from io import BytesIO
 
 from pypdf import PdfReader, PdfWriter
+
+from config import MAX_PDF_PAGES
 
 
 def standardize_pdf(file):
 
     file.file.seek(0)
 
-    reader = PdfReader(file.file)
-    writer = PdfWriter()
+    try:
+        reader = PdfReader(file.file)
 
-    for page in reader.pages:
-        writer.add_page(page)
+        if len(reader.pages) > MAX_PDF_PAGES:
+            raise ValueError(
+                f"El PDF {file.filename} tiene demasiadas páginas"
+            )
 
-    output = BytesIO()
+        writer = PdfWriter()
 
-    filename = file.filename.encode("utf-8")
+        for page in reader.pages:
+            writer.add_page(page)
 
-    output.write(
-        len(filename).to_bytes(4, "big")
-    )
+        output = BytesIO()
 
-    output.write(filename)
+        filename = file.filename.encode("utf-8")
 
-    writer.write(output)
+        output.write(
+            len(filename).to_bytes(4, "big")
+        )
 
-    return output.getvalue()
+        output.write(filename)
+
+        writer.write(output)
+
+        return output.getvalue()
+
+    except ValueError:
+        raise
+
+    except Exception:
+        # PDF corrupto, cifrado o malicioso: es un error del cliente
+        raise ValueError(
+            f"No se pudo leer el PDF {file.filename}"
+        )

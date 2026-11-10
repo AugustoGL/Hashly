@@ -4,7 +4,7 @@ import jwt
 from datetime import datetime, timedelta, timezone
 
 from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
+from argon2.exceptions import Argon2Error, InvalidHashError
 
 from config import SECRET_KEY
 
@@ -30,8 +30,18 @@ def verify_password(
 
         return True
 
-    except VerifyMismatchError:
+    except (Argon2Error, InvalidHashError):
+        # Contraseña incorrecta o hash dañado: nunca un 500
         return False
+
+
+# Hash de relleno para que el login tarde lo mismo exista o no el
+# usuario (si no, el tiempo de respuesta revela qué emails existen).
+_DUMMY_HASH = password_hasher.hash("hashly-dummy-password")
+
+
+def burn_password_check(password: str) -> None:
+    verify_password(password, _DUMMY_HASH)
 
 
 def create_access_token(
