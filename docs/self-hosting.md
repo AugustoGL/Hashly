@@ -31,6 +31,8 @@ Todo se configura con variables de entorno (archivo `.env`, ver `.env.example`).
 | `PUBLIC_UPLOAD_RATE_LIMIT_PER_MINUTE` | 20 | Búsquedas públicas con archivos, por IP |
 | `MAX_IMAGE_PIXELS` | 50.000.000 | Píxeles por imagen (todos los frames) |
 | `MAX_PDF_PAGES` | 2000 | Páginas por PDF |
+| `COOKIE_SECURE` | `auto` | `auto` marca la cookie como `Secure` si la request llegó por HTTPS. Con proxy HTTPS podés forzar `1` |
+| `COOKIE_SAMESITE` | `lax` | `lax` si web y API comparten sitio (`app.` y `api.` del mismo dominio). `none` para dominios distintos (exige HTTPS) |
 | `BIND_ADDRESS` | `127.0.0.1` | Interfaz donde escuchan los puertos de Docker |
 | `OTS_CALENDARS` | alice, bob, finney | Calendar servers de OpenTimestamps |
 | `OTS_WORKER_INTERVAL` | 600 | Segundos entre pasadas del worker |
@@ -51,7 +53,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8100
 
 1. Poné un proxy con HTTPS delante (Caddy, Nginx, Traefik) para web y API. Los puertos escuchan solo en `127.0.0.1`, que es lo correcto si el proxy corre en la misma máquina.
    - Para que el rate limit vea la IP real de cada visitante y no la del proxy, agregá en `.env` `FORWARDED_ALLOW_IPS=<ip del proxy>` y hacé que el proxy envíe `X-Forwarded-For`. No uses `*` si el API es alcanzable sin pasar por el proxy: cualquiera podría falsificar su IP.
-2. En `.env`: `CORS_ORIGINS=https://tu-dominio.com` y `NEXT_PUBLIC_API_URL=https://api.tu-dominio.com`.
+2. En `.env`: `CORS_ORIGINS=https://tu-dominio.com` y `NEXT_PUBLIC_API_URL=https://api.tu-dominio.com`. `CORS_ORIGINS` tiene que listar el origen exacto de la web (no se admite `*`): es lo que autoriza a la web a usar la sesión.
 3. `docker compose up --build -d` (la URL del API se incrusta al construir la web, así que hay que reconstruir al cambiarla).
 4. Si vas a tener muchos usuarios, usá Postgres y no corras varias réplicas del API: el rate limit es en memoria.
 

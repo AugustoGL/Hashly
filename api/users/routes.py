@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 from argon2 import PasswordHasher
@@ -12,7 +12,9 @@ from auth.auth import (
     verify_password,
 )
 
+from auth.auth import ACCESS_TOKEN_EXPIRE_MINUTES
 from auth.dependencies import get_current_user
+from config import COOKIE_NAME, COOKIE_SAMESITE, COOKIE_SECURE
 
 
 router = APIRouter(
@@ -45,6 +47,14 @@ class UserLogin(BaseModel):
     password: str = Field(max_length=128)
 
     _email = field_validator("email", mode="before")(_normalize_email)
+
+
+def _cookie_secure(request: Request) -> bool:
+    if COOKIE_SECURE == "auto":
+        # SameSite=None exige Secure sí o sí
+        return request.url.scheme == "https" or COOKIE_SAMESITE == "none"
+
+    return COOKIE_SECURE in ("1", "true", "yes")
 
 
 @router.post("/register")
@@ -88,8 +98,15 @@ def register_user(
 @router.post("/login")
 def login_user(
     user_data: UserLogin,
+    request: Request,
+    response: Response,
     db: Session = Depends(get_db)
 ):
+    """
+    Devuelve un JWT (para usar por header) y además deja una cookie de
+    sesión `HttpOnly`, que es la que usa la web: el JavaScript de la
+    página no puede leerla.
+    """
 
     user = (
         db.query(User)
@@ -118,10 +135,33 @@ def login_user(
         user.id
     )
 
+    response.set_cookie(
+        COOKIE_NAME,
+        access_token,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        httponly=True,
+        secure=_cookie_secure(request),
+        samesite=COOKIE_SAMESITE,
+        path="/"
+    )
+
     return {
         "access_token": access_token,
         "token_type": "bearer"
     }
+
+
+@router.post("/logout", status_code=204)
+def logout_user(request: Request, response: Response):
+    """Borra la cookie de sesión de la web."""
+
+    response.delete_cookie(
+        COOKIE_NAME,
+        httponly=True,
+        secure=_cookie_secure(request),
+        samesite=COOKIE_SAMESITE,
+        path="/"
+    )
 
 @router.get("/me")
 def get_me(

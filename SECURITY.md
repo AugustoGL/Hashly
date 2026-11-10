@@ -14,6 +14,7 @@ La verificación pública responde solo si una raíz existe y desde cuándo. Nom
 - Las API keys se guardan como SHA-256; la key completa se muestra una sola vez y se puede revocar.
 - Las contraseñas usan Argon2. El login tarda lo mismo exista o no el usuario.
 - Los tokens JWT duran 60 minutos y se firman con `SECRET_KEY` (HS256, algoritmo fijo).
+- **La web usa una cookie de sesión `HttpOnly`**: el JavaScript de la página no puede leerla, así que un script inyectado no puede robar la sesión. Toda operación que modifica datos con esa cookie exige venir de un origen permitido (protección CSRF), además de `SameSite=Lax`.
 - Los emails se normalizan a minúsculas: una sola cuenta por dirección.
 
 ## Protecciones contra abuso
@@ -41,7 +42,7 @@ Hashly normaliza cada archivo antes de hashearlo, para que cambios irrelevantes 
 - El rate limit es en memoria (una sola instancia) y por IP. Detrás de un proxy hay que configurar `FORWARDED_ALLOW_IPS` (ver `docs/self-hosting.md`).
 - `GET /v1/packages/{id}/ots-proof` es público y los ids son correlativos: cualquiera puede descargar las pruebas y, con ellas, las raíces. No revela nombres, archivos ni dueños, pero sí cuántos paquetes hay y cuándo se sellaron.
 - El registro informa si un email ya está en uso.
-- Los JWT de la web viven en `localStorage`; no hay revocación antes de su vencimiento.
+- No hay revocación de sesiones antes de su vencimiento (60 minutos): cerrar sesión borra la cookie del navegador, pero un token copiado antes seguiría valiendo hasta vencer.
 - La huella de un PDF depende de cómo lo reescribe la librería `pypdf`: una actualización futura podría cambiarla. Por eso su versión está fijada.
 - La altura de bloque la informan los calendar servers; la verificación completa requiere un nodo Bitcoin propio.
 

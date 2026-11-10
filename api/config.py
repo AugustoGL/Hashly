@@ -58,6 +58,13 @@ CORS_ORIGINS = [
     if origin.strip()
 ]
 
+if "*" in CORS_ORIGINS:
+    # Con cookies de sesión, "*" dejaría que cualquier sitio lea los
+    # datos de un usuario logueado.
+    raise RuntimeError(
+        "CORS_ORIGINS no puede ser '*': listá los orígenes de tu web"
+    )
+
 # Calendar servers de OpenTimestamps
 OTS_CALENDARS = [
     url.strip()
@@ -95,3 +102,16 @@ if len(SECRET_KEY) < 32:
         "SECRET_KEY tiene menos de 32 caracteres: usá una más larga "
         "(python -c \"import secrets; print(secrets.token_hex(32))\")"
     )
+
+# ---- Sesión de la web (cookie HttpOnly) ----
+
+COOKIE_NAME = "hashly_session"
+
+# "auto": Secure solo si la request llegó por HTTPS. En producción
+# detrás de HTTPS podés forzarlo con COOKIE_SECURE=1.
+COOKIE_SECURE = os.getenv("COOKIE_SECURE", "auto").lower()
+
+# "lax" sirve cuando web y API comparten sitio (localhost, o
+# app.dominio.com + api.dominio.com). Para dominios distintos: "none"
+# (exige HTTPS).
+COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "lax").lower()

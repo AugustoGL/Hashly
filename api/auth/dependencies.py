@@ -2,7 +2,7 @@ import jwt
 
 from datetime import datetime, timezone
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
@@ -10,10 +10,12 @@ from database.database import get_db
 from database.models import ApiKey, User
 
 from auth.auth import SECRET_KEY, ALGORITHM
+from config import COOKIE_NAME, CORS_ORIGINS
 from auth.api_keys import hash_key, looks_like_api_key
 
 
 security = HTTPBearer(
+    auto_error=False,
     description=(
         "API key (`hshl_live_...`) o token JWT obtenido en "
         "`POST /v1/users/login`."
@@ -81,14 +83,47 @@ def _user_from_jwt(token: str, db: Session) -> User:
     return user
 
 
+SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
+
+
+def _check_csrf(request: Request) -> None:
+    """
+    Una cookie viaja sola con cada request, así que otra página podría
+    intentar usarla. Para todo lo que modifica datos se exige que el
+    pedido venga de un origen permitido. (Las API keys y los JWT por
+    header no necesitan esto: ninguna página ajena puede leerlos.)
+    """
+
+    if request.method in SAFE_METHODS:
+        return
+
+    if request.headers.get("origin") not in CORS_ORIGINS:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Origen no permitido"
+        )
+
+
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
     db: Session = Depends(get_db)
 ) -> User:
 
-    token = credentials.credentials
+    # 1) Header Authorization: API key o JWT (clientes del API)
+    if credentials is not None:
+        token = credentials.credentials
 
-    if looks_like_api_key(token):
-        return _user_from_api_key(token, db)
+        if looks_like_api_key(token):
+            return _user_from_api_key(token, db)
 
-    return _user_from_jwt(token, db)
+        return _user_from_jwt(token, db)
+
+    # 2) Cookie de sesión HttpOnly (la web)
+    cookie = request.cookies.get(COOKIE_NAME)
+
+    if cookie:
+        _check_csrf(request)
+        return _user_from_jwt(cookie, db)
+
+    raise _unauthorized("Falta la credencial")

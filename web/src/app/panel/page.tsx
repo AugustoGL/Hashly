@@ -6,8 +6,6 @@ import {
   API_URL,
   ApiError,
   api,
-  setToken,
-  getToken,
   type ApiKeyRow,
   type FileProof,
   type PackageDetail,
@@ -27,8 +25,8 @@ export default function Panel() {
   const [keys, setKeys] = useState<ApiKeyRow[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const logout = useCallback(() => {
-    setToken(null);
+  const logout = useCallback(async () => {
+    await api.logout().catch(() => undefined);
     router.push("/entrar");
   }, [router]);
 
@@ -38,26 +36,22 @@ export default function Panel() {
       setPackages(pk.slice().reverse());
       setKeys(ks);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) return logout();
+      if (err instanceof ApiError && err.status === 401) return router.replace("/entrar");
       setError(err instanceof Error ? err.message : "Algo salió mal");
     }
-  }, [logout]);
+  }, [router]);
 
   useEffect(() => {
-    if (!getToken()) {
-      router.replace("/entrar");
-      return;
-    }
     void (async () => {
       try {
         setEmail((await api.me()).email);
       } catch {
-        logout();
+        router.replace("/entrar");
         return;
       }
       await load();
     })();
-  }, [router, load, logout]);
+  }, [router, load]);
 
   // Mientras haya sellos en curso, refrescamos cada 30 s
   const inFlight = packages.some((p) => p.seal && (p.seal.status === "creating" || p.seal.status === "pending"));

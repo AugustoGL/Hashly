@@ -7,7 +7,9 @@ Base: `http://localhost:8000/v1`. La referencia interactiva (OpenAPI) está en `
 Dos formas, intercambiables, en el header `Authorization: Bearer <token>`:
 
 - **API key** (`hshl_live_…`): para tus apps. Se crea con `POST /v1/keys/`.
-- **JWT**: lo devuelve `POST /v1/users/login` (dura 60 minutos). Lo usa la web.
+- **JWT**: lo devuelve `POST /v1/users/login` (dura 60 minutos).
+
+La web no usa ninguno de los dos por header: el login deja además una cookie de sesión `HttpOnly`, y `POST /v1/users/logout` la borra. Con cookie, las operaciones que modifican datos exigen un header `Origin` permitido.
 
 La API key completa se muestra **una sola vez**. Hashly guarda solo su hash.
 

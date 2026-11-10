@@ -2,22 +2,12 @@
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
-const TOKEN_KEY = "hashly.token";
-
-export function getToken(): string | null {
+// Limpieza: versiones anteriores guardaban el token en localStorage.
+if (typeof window !== "undefined") {
   try {
-    return window.localStorage.getItem(TOKEN_KEY);
+    window.localStorage.removeItem("hashly.token");
   } catch {
-    return null;
-  }
-}
-
-export function setToken(token: string | null) {
-  try {
-    if (token) window.localStorage.setItem(TOKEN_KEY, token);
-    else window.localStorage.removeItem(TOKEN_KEY);
-  } catch {
-    /* almacenamiento bloqueado: la sesión dura lo que dure la pestaña */
+    /* almacenamiento bloqueado: nada que limpiar */
   }
 }
 
@@ -81,14 +71,14 @@ function detailOf(body: unknown): string {
   return "Algo salió mal";
 }
 
-async function request<T>(path: string, init: RequestInit = {}, auth = true): Promise<T> {
-  const headers = new Headers(init.headers);
-  const token = auth ? getToken() : null;
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-
+/**
+ * La sesión vive en una cookie HttpOnly que pone el API al iniciar sesión:
+ * este código nunca ve el token, así que un script inyectado tampoco podría robarlo.
+ */
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, { ...init, headers });
+    res = await fetch(`${API_URL}${path}`, { ...init, credentials: "include" });
   } catch {
     throw new ApiError(0, "No se pudo conectar con el API. ¿Está corriendo?");
   }
@@ -114,9 +104,9 @@ function filesForm(files: File[], extra: Record<string, string> = {}) {
 }
 
 export const api = {
-  register: (email: string, password: string) => request("/v1/users/register", json({ email, password }), false),
-  login: (email: string, password: string) =>
-    request<{ access_token: string }>("/v1/users/login", json({ email, password }), false),
+  register: (email: string, password: string) => request("/v1/users/register", json({ email, password })),
+  login: (email: string, password: string) => request<unknown>("/v1/users/login", json({ email, password })),
+  logout: () => request<void>("/v1/users/logout", { method: "POST" }),
   me: () => request<{ id: number; email: string }>("/v1/users/me"),
 
   packages: () => request<PackageSummary[]>("/v1/packages/"),
@@ -132,10 +122,10 @@ export const api = {
   revokeKey: (id: number) => request<void>(`/v1/keys/${id}`, { method: "DELETE" }),
 
   joinWaitlist: (email: string, interest: "contrato" | "bitcoin" = "contrato") =>
-    request<{ ok: boolean }>("/v1/waitlist/", json({ email, interest }), false),
+    request<{ ok: boolean }>("/v1/waitlist/", json({ email, interest })),
 
   searchRoot: (merkle_root: string) =>
-    request<SearchResult>("/v1/packages/search/merkle-root", json({ merkle_root }), false),
+    request<SearchResult>("/v1/packages/search/merkle-root", json({ merkle_root })),
   searchFiles: (files: File[]) =>
-    request<SearchResult>("/v1/packages/search/package", { method: "POST", body: filesForm(files) }, false),
+    request<SearchResult>("/v1/packages/search/package", { method: "POST", body: filesForm(files) }),
 };

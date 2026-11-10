@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { api, setToken } from "@/lib/api";
+import { api } from "@/lib/api";
 import { ErrorNote, Field, Shell, inputClass } from "@/components/app/Shell";
 
 export default function Entrar() {
@@ -19,8 +19,7 @@ export default function Entrar() {
     setError(null);
     try {
       if (mode === "register") await api.register(email, password);
-      const { access_token } = await api.login(email, password);
-      setToken(access_token);
+      await api.login(email, password);
       router.push("/panel");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Algo salió mal");

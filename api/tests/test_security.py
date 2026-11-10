@@ -249,3 +249,104 @@ def test_private_endpoints_reject_anonymous(client):
         ("get", "/v1/users/me"),
     ]:
         assert getattr(client, method)(path).status_code in (401, 403), path
+
+
+# ---------------- Sesión por cookie ----------------
+
+ORIGIN = {"Origin": "http://localhost:3000"}
+
+
+def login(client, user):
+    return client.post(
+        "/v1/users/login",
+        json={"email": user.email, "password": "password123"},
+    )
+
+
+def test_login_sets_httponly_cookie(client, user):
+    r = login(client, user)
+
+    cookie = r.headers["set-cookie"].lower()
+
+    assert "hashly_session=" in cookie
+    assert "httponly" in cookie
+    assert "samesite=lax" in cookie
+
+
+def test_cookie_authenticates_reads(client, user):
+    login(client, user)
+
+    r = client.get("/v1/users/me")
+
+    assert r.status_code == 200
+    assert r.json()["email"] == user.email
+
+
+def test_cookie_writes_require_an_allowed_origin(client, user):
+    """CSRF: otra página no puede usar la cookie para modificar datos."""
+
+    login(client, user)
+
+    no_origin = client.post("/v1/keys/", json={"name": "x"})
+    evil = client.post(
+        "/v1/keys/", json={"name": "x"},
+        headers={"Origin": "https://sitio-malicioso.example"},
+    )
+    good = client.post("/v1/keys/", json={"name": "x"}, headers=ORIGIN)
+
+    assert no_origin.status_code == 403
+    assert evil.status_code == 403
+    assert good.status_code == 201
+
+
+def test_api_keys_do_not_need_an_origin(client, auth_headers):
+    """El chequeo de origen es solo para cookies: el API sigue igual."""
+
+    r = client.post("/v1/keys/", json={"name": "x"}, headers=auth_headers)
+    assert r.status_code == 201
+
+
+def test_logout_clears_the_cookie(client, user):
+    login(client, user)
+    assert client.get("/v1/users/me").status_code == 200
+
+    assert client.post("/v1/users/logout").status_code == 204
+    assert client.get("/v1/users/me").status_code == 401
+
+
+def test_cors_allows_credentials_only_for_listed_origins(client):
+    allowed = client.get("/health", headers=ORIGIN)
+    other = client.get(
+        "/health", headers={"Origin": "https://sitio-malicioso.example"}
+    )
+
+    assert allowed.headers["access-control-allow-origin"] == ORIGIN["Origin"]
+    assert allowed.headers["access-control-allow-credentials"] == "true"
+    assert "access-control-allow-origin" not in other.headers
+
+
+# ---------------- Huellas de referencia ----------------
+
+GOLDEN = {
+    # Si alguno de estos cambia, una actualización de pypdf o Pillow
+    # alteró cómo se normalizan los archivos y los paquetes ya sellados
+    # dejarían de verificar. NO actualices el valor: fijá la versión
+    # anterior de la librería o agregá una versión nueva del normalizador.
+    "golden.pdf": "069c688b52fe47d956d6424b2e7e8a9a23283fb1902ef11e718862fddaa5fcda",
+}
+
+
+def test_pdf_fingerprint_is_stable_across_library_upgrades():
+    import hashlib
+    from pathlib import Path
+
+    from standardizers import standardize_file
+
+    data = (Path(__file__).parent / "fixtures" / "golden.pdf").read_bytes()
+
+    # El nombre forma parte de la huella: se usa el del valor de referencia
+    digest = hashlib.sha256(
+        standardize_file(Upload("a.pdf", data))
+    ).hexdigest()
+
+    assert digest == GOLDEN["golden.pdf"]
