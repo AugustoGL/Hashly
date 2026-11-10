@@ -13,8 +13,8 @@ Cada archivo se reduce a un hash, todos los hashes se combinan en un árbol de M
 ## Instalación rápida (Docker)
 
 ```bash
-git clone https://github.com/AugustoGL/hashly.git
-cd hashly
+git clone https://github.com/AugustoGL/Hashly.git
+cd Hashly
 cp .env.example .env
 docker compose up --build -d
 ```
@@ -95,6 +95,7 @@ docs/   Documentación
 
 ```bash
 make test         # tests del backend (no usan la red)
+make smoke        # recorre el flujo completo contra el API en marcha
 ```
 
 ## Qué viene

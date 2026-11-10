@@ -269,3 +269,31 @@ def test_rate_limit_returns_429(client, monkeypatch):
 
     assert codes[:3] == [200, 200, 200]
     assert 429 in codes[3:]
+
+
+# ---------------- Lista de espera ----------------
+
+def test_waitlist_joins_without_auth_and_dedupes(client, db):
+    from database.models import WaitlistEntry
+
+    body = {"email": "  Quiero@Ejemplo.COM ", "interest": "contrato"}
+
+    for _ in range(2):
+        r = client.post("/v1/waitlist/", json=body)
+        assert r.status_code == 201
+        assert r.json() == {"ok": True}
+
+    rows = db.query(WaitlistEntry).all()
+    assert len(rows) == 1
+    assert rows[0].email == "quiero@ejemplo.com"
+
+
+def test_waitlist_validates_input(client):
+    assert client.post(
+        "/v1/waitlist/", json={"email": "no-es-email"}
+    ).status_code == 422
+
+    assert client.post(
+        "/v1/waitlist/",
+        json={"email": "a@b.co", "interest": "otra-cosa"},
+    ).status_code == 422

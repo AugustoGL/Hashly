@@ -27,6 +27,7 @@ Lo que revela datos exige credenciales; lo que solo confirma existencia e integr
 | `POST /packages/search/merkle-root` | **Público** |
 | `POST /packages/search/package` | **Público** |
 | `GET /packages/{id}/ots-proof` | **Público** |
+| `POST /waitlist/` | Público (lista de espera de la vía por contrato) |
 | `GET /health` | Público |
 
 Las respuestas públicas **no incluyen** nombre del paquete, nombres de archivo ni dueño.

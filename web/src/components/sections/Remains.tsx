@@ -15,8 +15,8 @@ const manifest = `{
   ]
 }`;
 
-const apiCall = `curl https://api.hashly.example/packages/ \\
-  -H "Authorization: Bearer $HASHLY_SECRET_KEY" \\
+const apiCall = `curl http://localhost:8000/v1/packages/ \\
+  -H "Authorization: Bearer $HASHLY_API_KEY" \\
   -F "name=Contrato de locación" \\
   -F "files=@contrato.pdf"`;
 

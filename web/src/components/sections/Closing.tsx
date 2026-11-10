@@ -62,11 +62,11 @@ export function Cta() {
             Probar la demo
           </a>
           <span className="text-muted">o</span>
-          <a href="#api" className="btn btn-quiet w-[72vw] sm:w-52">
-            Ver el API
+          <a href="/entrar" className="btn btn-quiet w-[72vw] sm:w-52">
+            Crear cuenta
           </a>
         </div>
-        <p className="text-muted">La demo corre en tu navegador. El API va a pedir una secret key.</p>
+        <p className="text-muted">La demo corre en tu navegador. Con una cuenta sellás de verdad y obtenés tu API key.</p>
       </div>
       <p className="display text-[length:var(--step-display)]" data-reveal style={{ "--i": 2 } as React.CSSProperties}>
         o lo integrás?
@@ -88,12 +88,15 @@ export function Footer() {
         </a>
       </div>
       <div className="mt-auto pt-24">
-        <p className="text-[0.95rem]">Para escribirnos</p>
-        {/* Dirección de ejemplo: reemplazar por la real antes de publicar. */}
-        <a href="mailto:hola@hashly.app" className="display mt-2 block break-words text-[length:var(--step-display)] leading-[0.9] transition-opacity hover:opacity-80">
-          hola@
-          <wbr />
-          hashly.app
+        <p className="text-[0.95rem]">Código abierto, licencia MIT</p>
+        <a
+          href="https://github.com/AugustoGL/Hashly"
+          target="_blank"
+          rel="noreferrer"
+          className="display mt-2 block break-words text-[length:var(--step-display)] leading-[0.9] transition-opacity hover:opacity-80"
+        >
+          Descargalo en GitHub
+          <span className="sr-only"> (se abre en otra pestaña)</span>
         </a>
       </div>
       <div className="mt-12 flex flex-col gap-2 text-[0.875rem] sm:flex-row sm:justify-between">

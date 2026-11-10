@@ -214,3 +214,30 @@ class PackageTimestamp(Base):
         back_populates="timestamp"
     )
 
+
+
+class WaitlistEntry(Base):
+    __tablename__ = "waitlist"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True
+    )
+
+    email: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        index=True
+    )
+
+    # "contrato" (vía NFT, próximamente) o "bitcoin"
+    interest: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False
+    )

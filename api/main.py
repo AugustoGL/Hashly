@@ -10,6 +10,7 @@ from auth.routes import router as keys_router
 from config import CORS_ORIGINS
 from packages.routes import router as packages_router
 from users.routes import router as users_router
+from waitlist.routes import router as waitlist_router
 
 
 def run_migrations() -> None:
@@ -65,6 +66,7 @@ v1 = APIRouter(prefix="/v1")
 v1.include_router(users_router)
 v1.include_router(keys_router)
 v1.include_router(packages_router)
+v1.include_router(waitlist_router)
 
 app.include_router(v1)
 

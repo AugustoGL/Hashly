@@ -48,11 +48,15 @@ export default function Panel() {
       router.replace("/entrar");
       return;
     }
-    api
-      .me()
-      .then((me) => setEmail(me.email))
-      .catch(() => logout());
-    load();
+    void (async () => {
+      try {
+        setEmail((await api.me()).email);
+      } catch {
+        logout();
+        return;
+      }
+      await load();
+    })();
   }, [router, load, logout]);
 
   // Mientras haya sellos en curso, refrescamos cada 30 s

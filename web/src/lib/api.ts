@@ -131,6 +131,9 @@ export const api = {
   createKey: (name: string) => request<ApiKeyRow & { key: string }>("/v1/keys/", json({ name })),
   revokeKey: (id: number) => request<void>(`/v1/keys/${id}`, { method: "DELETE" }),
 
+  joinWaitlist: (email: string, interest: "contrato" | "bitcoin" = "contrato") =>
+    request<{ ok: boolean }>("/v1/waitlist/", json({ email, interest }), false),
+
   searchRoot: (merkle_root: string) =>
     request<SearchResult>("/v1/packages/search/merkle-root", json({ merkle_root }), false),
   searchFiles: (files: File[]) =>

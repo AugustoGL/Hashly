@@ -2,23 +2,14 @@
 
 import { useId, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
+import { api } from "@/lib/api";
 
-/**
- * Handler simulado: todavía no hay backend para la lista de espera.
- * TODO: reemplazar por un POST real (por ejemplo, /waitlist en el API de Hashly) antes de publicar.
- * Hoy el email no se guarda en ningún lado.
- */
-async function joinWaitlist(email: string, interest: "bitcoin" | "contrato"): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 700));
-  if (process.env.NODE_ENV !== "production") console.info("[lista de espera simulada]", email, interest);
-}
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function Pricing() {
   const [email, setEmail] = useState("");
-  const [interest, setInterest] = useState<"bitcoin" | "contrato">("bitcoin");
-  const [state, setState] = useState<"idle" | "sending" | "done" | "invalid">("idle");
+  const [state, setState] = useState<"idle" | "sending" | "done" | "invalid" | "error">("idle");
   const id = useId();
 
   async function submit(event: React.FormEvent) {
@@ -28,8 +19,12 @@ export function Pricing() {
       return;
     }
     setState("sending");
-    await joinWaitlist(email.trim(), interest);
-    setState("done");
+    try {
+      await api.joinWaitlist(email.trim(), "contrato");
+      setState("done");
+    } catch {
+      setState("error");
+    }
   }
 
   return (
@@ -58,30 +53,17 @@ export function Pricing() {
             {state === "done" ? (
               <p role="status" className="flex items-start gap-3 text-[length:var(--step-lead)] leading-snug">
                 <Check className="mt-1 shrink-0 text-ok" aria-hidden />
-                Listo. Te escribimos a {email.trim()} cuando abra {interest === "bitcoin" ? "Hashly" : "la vía por contrato"}.
+                Listo. Te escribimos a {email.trim()} cuando abra la vía por contrato.
               </p>
             ) : (
               <form onSubmit={submit} noValidate>
-                <p className="text-muted">Hashly está en desarrollo. Dejanos tu email y te avisamos cuando abra.</p>
-                <fieldset className="mt-5 flex flex-wrap gap-2">
-                  <legend className="sr-only">Qué vía te interesa</legend>
-                  {(
-                    [
-                      ["bitcoin", "Bitcoin, gratis"],
-                      ["contrato", "Contrato, con wallet"],
-                    ] as const
-                  ).map(([value, label]) => (
-                    <label
-                      key={value}
-                      className={`cursor-pointer px-4 py-2.5 text-[0.95rem] transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent ${
-                        interest === value ? "bg-ink text-bg" : "bg-surface-2 text-ink hover:bg-[#1d2742]"
-                      }`}
-                    >
-                      <input type="radio" name="interest" value={value} checked={interest === value} onChange={() => setInterest(value)} className="sr-only" />
-                      {label}
-                    </label>
-                  ))}
-                </fieldset>
+                <p className="text-muted">
+                  La vía gratis ya está abierta:{" "}
+                  <a href="/entrar" className="link text-ink">
+                    creá tu cuenta
+                  </a>
+                  . Para la vía por contrato, dejanos tu email y te avisamos cuando abra.
+                </p>
                 <label htmlFor={id} className="sr-only">
                   Tu email
                 </label>
@@ -107,7 +89,11 @@ export function Pricing() {
                   </button>
                 </div>
                 <p id={`${id}-error`} aria-live="polite" className="mt-2 min-h-5 text-[length:var(--step-small)] text-accent">
-                  {state === "invalid" ? "Revisá el email: le falta algo para ser una dirección válida." : ""}
+                  {state === "invalid"
+                    ? "Revisá el email: le falta algo para ser una dirección válida."
+                    : state === "error"
+                      ? "No pudimos anotarte. Probá de nuevo en un rato."
+                      : ""}
                 </p>
               </form>
             )}

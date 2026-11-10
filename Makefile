@@ -1,4 +1,4 @@
-.PHONY: up down logs test seed api web worker
+.PHONY: up down logs test seed smoke api web worker
 
 up:        ## Levanta todo con Docker (web :3000, API :8000)
 	docker compose up --build -d
@@ -14,6 +14,9 @@ test:      ## Tests del backend
 
 seed:      ## Usuario demo + API key (dentro del contenedor)
 	docker compose exec api python seed.py
+
+smoke:     ## Recorre el flujo completo contra el API en marcha
+	python3 scripts/smoke.py
 
 # --- Sin Docker ---
 api:

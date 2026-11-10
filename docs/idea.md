@@ -107,12 +107,12 @@ El frontend es una landing impactante que explica qué hace Hashly y deja a la v
 
 ## Estado y próximos pasos
 
-El núcleo (paquetes, manifest y Merkle) funciona; el sellado en sí, por cualquiera de las dos vías, todavía no está implementado y el proyecto está en pausa mientras la prioridad es la hackathon de Celo.
+**v0.1 (publicada):** núcleo Merkle, API `/v1` con API keys, vía gratis con OpenTimestamps (envío a calendar servers, worker de confirmación y `.ots` público), email del dueño fuera de la búsqueda pública, cliente web (entrar, panel, verificar), lista de espera real para la vía por contrato, instalación con Docker Compose y documentación.
 
-1. Cerrar las decisiones abiertas de producto.
-2. Implementar la vía gratis (OpenTimestamps): está todo diseñado y es la de menor incertidumbre. Antes, confirmar contra la versión instalada de `ots` la sintaxis de hash directo y si la altura de bloque aparece sin nodo Bitcoin propio.
-3. Sacar el email del dueño de la búsqueda pública por `merkle_root`.
-4. Implementar la vía paga (contrato, NFT y embedded wallet), con soulbound y precios ya decididos.
-5. Abrir el API a terceros: API keys y documentación al estilo Stripe.
+**Siguiente:**
 
-Hay una ficha de integración de OTS (v2.1) y un documento de arquitectura y roadmap como base para retomarlo.
+1. Cerrar las decisiones abiertas de producto (NFT transferible o soulbound, facturación, formato de `client_reference_id`, límites del plan gratis).
+2. Verificar el `.ots` contra un nodo Bitcoin propio, para mostrar la altura de bloque sin depender de los calendar servers.
+3. Vía paga: contrato, NFT y embedded wallet.
+4. SDK y CLI (`hashly stamp archivo.pdf`).
+5. Documentación al estilo Stripe y apertura del API a terceros.
