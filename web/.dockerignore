@@ -1,0 +1,4 @@
+node_modules
+.next
+.taste-skill
+.env*

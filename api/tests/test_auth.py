@@ -8,7 +8,7 @@ from auth.auth import SECRET_KEY, ALGORITHM
 def test_register_user(client):
 
     response = client.post(
-        "/users/register",
+        "/v1/users/register",
         json={
             "email": "nuevo@test.com",
             "password": "password123"
@@ -28,7 +28,7 @@ def test_register_user(client):
 def test_register_duplicate_email(client):
 
     response = client.post(
-        "/users/register",
+        "/v1/users/register",
         json={
             "email": "nuevo@test.com",
             "password": "password123"
@@ -38,10 +38,10 @@ def test_register_duplicate_email(client):
     assert response.status_code == 200
 
     response = client.post(
-        "/users/register",
+        "/v1/users/register",
         json={
             "email": "nuevo@test.com",
-            "password": "otra123"
+            "password": "otra12345"
         }
     )
 
@@ -55,7 +55,7 @@ def test_register_duplicate_email(client):
 def test_login_success(client, user):
 
     response = client.post(
-        "/users/login",
+        "/v1/users/login",
         json={
             "email": user.email,
             "password": "password123"
@@ -83,7 +83,7 @@ def test_login_success(client, user):
 def test_login_wrong_password(client, user):
 
     response = client.post(
-        "/users/login",
+        "/v1/users/login",
         json={
             "email": user.email,
             "password": "password_incorrecta"
@@ -100,7 +100,7 @@ def test_login_wrong_password(client, user):
 def test_login_nonexistent_user(client):
 
     response = client.post(
-        "/users/login",
+        "/v1/users/login",
         json={
             "email": "noexiste@test.com",
             "password": "password123"
@@ -124,7 +124,7 @@ def test_invalid_token_rejected(
     }
 
     response = client.get(
-        "/packages/",
+        "/v1/packages/",
         headers=headers
     )
 
@@ -155,7 +155,7 @@ def test_expired_token_rejected(
     }
 
     response = client.get(
-        "/packages/",
+        "/v1/packages/",
         headers=headers
     )
 
@@ -183,7 +183,7 @@ def test_token_for_nonexistent_user_rejected(
     }
 
     response = client.get(
-        "/packages/",
+        "/v1/packages/",
         headers=headers
     )
 
@@ -193,7 +193,7 @@ def test_token_for_nonexistent_user_rejected(
 def test_missing_token_rejected(client):
 
     response = client.get(
-        "/packages/"
+        "/v1/packages/"
     )
 
     assert response.status_code == 401

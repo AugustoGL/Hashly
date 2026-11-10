@@ -36,7 +36,7 @@ def create_package(
         ]
 
     return client.post(
-        "/packages/",
+        "/v1/packages/",
         headers=headers,
         data={
             "name": name
@@ -107,7 +107,7 @@ def test_list_my_packages(
     )
 
     response = client.get(
-        "/packages/",
+        "/v1/packages/",
         headers=auth_headers
     )
 
@@ -141,7 +141,7 @@ def test_user_only_sees_own_packages(
     )
 
     response = client.get(
-        "/packages/",
+        "/v1/packages/",
         headers=second_auth_headers
     )
 
@@ -163,7 +163,7 @@ def test_get_own_package(
     package_id = response.json()["id"]
 
     response = client.get(
-        f"/packages/{package_id}",
+        f"/v1/packages/{package_id}",
         headers=auth_headers
     )
 
@@ -191,7 +191,7 @@ def test_cannot_get_other_users_package(
     package_id = response.json()["id"]
 
     response = client.get(
-        f"/packages/{package_id}",
+        f"/v1/packages/{package_id}",
         headers=second_auth_headers
     )
 
@@ -243,7 +243,7 @@ def test_verify_identical_package(
     ]
 
     response = client.post(
-        f"/packages/{package_id}/verify",
+        f"/v1/packages/{package_id}/verify",
         headers=auth_headers,
         files=verification_files
     )
@@ -283,7 +283,7 @@ def test_verify_modified_file(
     package_id = response.json()["id"]
 
     response = client.post(
-        f"/packages/{package_id}/verify",
+        f"/v1/packages/{package_id}/verify",
         headers=auth_headers,
         files=[
             make_upload(
@@ -325,7 +325,7 @@ def test_verify_missing_file(
     package_id = response.json()["id"]
 
     response = client.post(
-        f"/packages/{package_id}/verify",
+        f"/v1/packages/{package_id}/verify",
         headers=auth_headers,
         files=[
             make_upload(
@@ -370,7 +370,7 @@ def test_verify_extra_file(
     package_id = response.json()["id"]
 
     response = client.post(
-        f"/packages/{package_id}/verify",
+        f"/v1/packages/{package_id}/verify",
         headers=auth_headers,
         files=[
             make_upload(
@@ -408,7 +408,7 @@ def test_cannot_verify_other_users_package(
     package_id = response.json()["id"]
 
     response = client.post(
-        f"/packages/{package_id}/verify",
+        f"/v1/packages/{package_id}/verify",
         headers=second_auth_headers,
         files=[
             make_upload(
@@ -440,7 +440,7 @@ def test_search_by_merkle_root(
     merkle_root = response.json()["merkle_root"]
 
     response = client.post(
-        "/packages/search/merkle-root",
+        "/v1/packages/search/merkle-root",
         json={
             "merkle_root": merkle_root
         }
@@ -456,10 +456,13 @@ def test_search_by_merkle_root(
 
     package = data["packages"][0]
 
-    assert package["name"] == "Registro público"
+    # Lo público confirma, no revela
+    assert "name" not in package
+    assert "owner" not in package
+    assert "manifest" not in package
+    assert user.email not in str(data)
 
-    assert package["owner"]["id"] == user.id
-    assert package["owner"]["email"] == user.email
+    assert package["seal"]["status"] == "pending"
 
 
 def test_search_by_merkle_root_does_not_require_auth(
@@ -475,7 +478,7 @@ def test_search_by_merkle_root_does_not_require_auth(
     merkle_root = response.json()["merkle_root"]
 
     response = client.post(
-        "/packages/search/merkle-root",
+        "/v1/packages/search/merkle-root",
         json={
             "merkle_root": merkle_root
         }
@@ -493,7 +496,7 @@ def test_search_nonexistent_merkle_root(
     )
 
     response = client.post(
-        "/packages/search/merkle-root",
+        "/v1/packages/search/merkle-root",
         json={
             "merkle_root": root
         }
@@ -512,7 +515,7 @@ def test_search_invalid_merkle_root(
 ):
 
     response = client.post(
-        "/packages/search/merkle-root",
+        "/v1/packages/search/merkle-root",
         json={
             "merkle_root": "abc"
         }
@@ -568,7 +571,7 @@ def test_search_by_package(
     ]
 
     response = client.post(
-        "/packages/search/package",
+        "/v1/packages/search/package",
         files=search_files
     )
 
@@ -581,9 +584,9 @@ def test_search_by_package(
 
     package = data["packages"][0]
 
-    assert package["name"] == "Package buscable"
-    assert package["owner"]["id"] == user.id
-    assert package["owner"]["email"] == user.email
+    assert "name" not in package
+    assert "owner" not in package
+    assert user.email not in str(data)
 
 
 def test_search_by_package_does_not_require_auth(
@@ -597,7 +600,7 @@ def test_search_by_package_does_not_require_auth(
     )
 
     response = client.post(
-        "/packages/search/package",
+        "/v1/packages/search/package",
         files=[
             make_upload(
                 "archivo.txt",
@@ -626,7 +629,7 @@ def test_search_by_modified_package_not_found(
     )
 
     response = client.post(
-        "/packages/search/package",
+        "/v1/packages/search/package",
         files=[
             make_upload(
                 "archivo.txt",
@@ -660,7 +663,7 @@ def test_search_by_package_with_extra_file_not_found(
     )
 
     response = client.post(
-        "/packages/search/package",
+        "/v1/packages/search/package",
         files=[
             make_upload(
                 "archivo.txt",

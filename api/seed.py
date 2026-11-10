@@ -1,123 +1,51 @@
-import hashlib
-from datetime import datetime, timezone
+"""
+Crea un usuario de demo y una API key para probar el API.
 
+    python seed.py
+"""
+
+from auth.api_keys import generate_key
+from auth.auth import password_hasher
 from database.database import SessionLocal
-from database.models import User, Package
+from database.models import ApiKey, User
 
 
-def calculate_merkle_root(hashes):
-    level = hashes.copy()
-
-    if not level:
-        return None
-
-    while len(level) > 1:
-        next_level = []
-
-        for i in range(0, len(level), 2):
-            left = level[i]
-
-            if i + 1 < len(level):
-                right = level[i + 1]
-            else:
-                right = left
-
-            parent = hashlib.sha256(
-                bytes.fromhex(left) +
-                bytes.fromhex(right)
-            ).hexdigest()
-
-            next_level.append(parent)
-
-        level = next_level
-
-    return level[0]
+EMAIL = "demo@hashly.local"
+PASSWORD = "demo-password"
 
 
-def create_file_hash(content):
-    return hashlib.sha256(
-        content.encode("utf-8")
-    ).hexdigest()
+def main() -> None:
+    db = SessionLocal()
+
+    try:
+        user = db.query(User).filter(User.email == EMAIL).first()
+
+        if user is None:
+            user = User(
+                email=EMAIL,
+                password_hash=password_hasher.hash(PASSWORD),
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+
+        key, prefix, key_hash = generate_key()
+
+        db.add(
+            ApiKey(
+                user_id=user.id,
+                name="demo",
+                prefix=prefix,
+                key_hash=key_hash,
+            )
+        )
+        db.commit()
+
+        print(f"Usuario: {EMAIL} / {PASSWORD}")
+        print(f"API key: {key}")
+    finally:
+        db.close()
 
 
-db = SessionLocal()
-
-user = db.query(User).first()
-
-if not user:
-    print("No hay usuarios registrados.")
-    db.close()
-    exit()
-
-
-packages_data = [
-    {
-        "name": "Documentos de prueba",
-        "files": [
-            ("documento.txt", "Contenido del documento de prueba"),
-            ("foto.png", "Imagen de prueba"),
-        ]
-    },
-    {
-        "name": "Contrato de alquiler",
-        "files": [
-            ("contrato.pdf", "Contrato de prueba"),
-            ("datos.json", '{"nombre": "Augusto", "tipo": "demo"}'),
-            ("notas.txt", "Notas del paquete"),
-        ]
-    },
-    {
-        "name": "Proyecto Hashly",
-        "files": [
-            ("archivo.py", "print('Hashly')"),
-            ("README.md", "# Hashly\nSistema de prueba"),
-        ]
-    }
-]
-
-
-for package_data in packages_data:
-
-    name = package_data["name"]
-    files = package_data["files"]
-
-    files = sorted(
-        files,
-        key=lambda file: file[0].lower()
-    )
-
-    manifest = []
-
-    for index, (filename, content) in enumerate(files):
-
-        file_hash = create_file_hash(content)
-
-        manifest.append({
-            "index": index,
-            "filename": filename,
-            "hash": file_hash
-        })
-
-    hashes = [
-        file["hash"]
-        for file in manifest
-    ]
-
-    merkle_root = calculate_merkle_root(hashes)
-
-    package = Package(
-        user_id=user.id,
-        name=name,
-        created_at=datetime.now(timezone.utc),
-        manifest=manifest,
-        merkle_root=merkle_root
-    )
-
-    db.add(package)
-
-
-db.commit()
-
-print(f"Packages creados para: {user.email}")
-
-db.close()
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from argon2 import PasswordHasher
 
@@ -21,8 +21,8 @@ password_hasher = PasswordHasher()
 
 
 class UserCreate(BaseModel):
-    email: str
-    password: str
+    email: str = Field(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    password: str = Field(min_length=8, max_length=128)
 
 
 class UserLogin(BaseModel):

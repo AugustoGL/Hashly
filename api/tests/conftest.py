@@ -1,4 +1,11 @@
 import io
+import os
+
+# Antes de importar cualquier módulo de la app
+os.environ.setdefault("SECRET_KEY", "test-secret-key-test-secret-key-0123456789")
+os.environ["HASHLY_AUTO_MIGRATE"] = "0"
+os.environ["RATE_LIMIT_PER_MINUTE"] = "0"
+os.environ["AUTH_RATE_LIMIT_PER_MINUTE"] = "0"
 
 import pytest
 
@@ -44,6 +51,25 @@ from main import app
 # ============================================================
 # Fixtures
 # ============================================================
+
+@pytest.fixture(autouse=True)
+def fake_ots(monkeypatch):
+    """Los tests nunca tocan la red: el cliente OTS se reemplaza."""
+
+    from ots import client
+
+    monkeypatch.setattr(
+        client, "stamp", lambda digest: b"OTS-PENDING:" + digest
+    )
+
+    monkeypatch.setattr(
+        client,
+        "upgrade",
+        lambda proof: client.UpgradeResult(
+            proof=proof, confirmed=False, block_height=None
+        ),
+    )
+
 
 @pytest.fixture
 def db():

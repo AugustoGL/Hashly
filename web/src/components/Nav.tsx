@@ -22,9 +22,14 @@ export function Nav() {
           ))}
         </ul>
       </nav>
-      <a href="#precio" className="btn btn-quiet !min-h-11 !px-4 !py-2">
-        Avisame
-      </a>
+      <div className="flex items-center gap-5">
+        <a href="/verificar" className="hidden transition-colors hover:text-accent sm:inline">
+          Verificar
+        </a>
+        <a href="/panel" className="btn btn-accent !min-h-11 !px-4 !py-2">
+          Entrar
+        </a>
+      </div>
     </header>
   );
 }

@@ -72,6 +72,28 @@ def verify_merkle_proof(leaf_hash: str, proof: list[dict], expected_root: str) -
     return current == expected_root
 
 
+def proof_from_manifest(manifest: list[dict], filename: str) -> list[dict]:
+    """Prueba de Merkle de un archivo a partir de un manifest guardado."""
+
+    entry = next(
+        (
+            e for e in manifest
+            if e["filename"].lower() == filename.lower()
+        ),
+        None
+    )
+
+    if entry is None:
+        raise ValueError(
+            f"'{filename}' no pertenece a este paquete"
+        )
+
+    return _merkle_proof(
+        [e["hash"] for e in manifest],
+        entry["index"]
+    )
+
+
 class Package:
 
     def __init__(self, files):

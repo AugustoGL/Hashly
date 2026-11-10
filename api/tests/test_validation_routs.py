@@ -46,7 +46,7 @@ def test_route_respects_max_files(
     ]
 
     response = client.post(
-        "/packages/",
+        "/v1/packages/",
         headers=auth_headers,
         data={
             "name": "Demasiados archivos"
@@ -70,7 +70,7 @@ def test_route_respects_max_file_size(
     )
 
     response = client.post(
-        "/packages/",
+        "/v1/packages/",
         headers=auth_headers,
         data={
             "name": "Archivo grande"
@@ -99,7 +99,7 @@ def test_route_respects_max_total_size(
     )
 
     response = client.post(
-        "/packages/",
+        "/v1/packages/",
         headers=auth_headers,
         data={
             "name": "Total grande"
